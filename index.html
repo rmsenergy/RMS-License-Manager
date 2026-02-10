@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor & License Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a202c;
+        }
+
+        .stat-card.alert {
+            border-left: 4px solid #f56565;
+        }
+
+        .stat-card.warning {
+            border-left: 4px solid #ed8936;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #ff8c00;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #ff8c00;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        .btn-primary:hover {
+            background: #e67e00;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1a202c;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #ff8c00;
+            color: #1a1a1a;
+            border-color: #ff8c00;
+            font-weight: 700;
+        }
+
+        .licenses-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .license-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .license-card.expiring-soon {
+            border-left: 4px solid #ed8936;
+        }
+
+        .license-card.expired {
+            border-left: 4px solid #f56565;
+        }
+
+        .license-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .license-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .vendor-name {
+            color: #ff8c00;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .license-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .license-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #1a202c;
+            font-weight: 500;
+        }
+
+        .license-key {
+            background: #f7fafc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #ff8c00;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .copy-btn:hover {
+            color: #e67e00;
+        }
+
+        .renewal-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .renewal-badge.expired {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .renewal-badge.warning {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .renewal-badge.ok {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #718096;
+        }
+
+        .close-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #ff8c00;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .license-details {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+        }
+
+        .alert-banner {
+            background: #feebc8;
+            border-left: 4px solid #ed8936;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-banner.critical {
+            background: #fed7d7;
+            border-left-color: #f56565;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Vendor & License Manager</h1>
+            <p>IT Department - Centralized license and vendor tracking</p>
+        </div>
+
+        <!-- Alerts -->
+        <div id="alerts-container"></div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Licenses</h3>
+                <div class="value" id="total-licenses">0</div>
+            </div>
+            <div class="stat-card alert">
+                <h3>Expired</h3>
+                <div class="value" id="expired-count">0</div>
+            </div>
+            <div class="stat-card warning">
+                <h3>Expiring Soon</h3>
+                <div class="value" id="expiring-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Monthly Cost</h3>
+                <div class="value" id="monthly-cost">$0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Annual Cost</h3>
+                <div class="value" id="annual-cost">$0</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <input type="text" class="search-box" id="search-box" placeholder="Search vendors, products, or license keys...">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="expiring">Expiring Soon</button>
+                <button class="filter-btn" data-filter="expired">Expired</button>
+            </div>
+            <button class="btn btn-secondary" onclick="exportToCSV()">📊 Export CSV</button>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Add License</button>
+        </div>
+
+        <!-- Licenses Grid -->
+        <div class="licenses-grid" id="licenses-grid">
+            <div class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3>No licenses yet</h3>
+                <p>Click "Add License" to get started</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal" id="license-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Add License</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <form id="license-form" onsubmit="saveLicense(event)">
+                <div class="form-group">
+                    <label class="form-label">Product/Service Name *</label>
+                    <input type="text" class="form-input" id="product-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Vendor Name *</label>
+                    <input type="text" class="form-input" id="vendor-name" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Contact Email</label>
+                        <input type="email" class="form-input" id="contact-email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Phone</label>
+                        <input type="tel" class="form-input" id="contact-phone">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Account Representative</label>
+                    <input type="text" class="form-input" id="account-rep">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">License Key / Credentials</label>
+                    <textarea class="form-textarea" id="license-key" placeholder="Enter license key, serial number, or login credentials"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Number of Seats/Users</label>
+                        <input type="number" class="form-input" id="seats" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Billing Cycle *</label>
+                        <select class="form-select" id="billing-cycle" required>
+                            <option value="monthly">Monthly</option>
+                            <option value="annual">Annual</option>
+                            <option value="one-time">One-time Purchase</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cost ($)</label>
+                        <input type="number" class="form-input" id="cost" min="0" step="0.01">
+                        <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">Enter the cost per billing cycle</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="auto-renew" style="width: auto;">
+                            Auto-Renew Enabled
+                        </label>
+                        <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">Check if this license automatically renews</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Purchase Date</label>
+                        <input type="date" class="form-input" id="purchase-date">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Renewal Date *</label>
+                        <input type="date" class="form-input" id="renewal-date" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-textarea" id="notes" placeholder="Additional notes or details"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save License</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let licenses = [];
+        let editingId = null;
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        // Load licenses from localStorage
+        function loadLicenses() {
+            const stored = localStorage.getItem('it-licenses');
+            if (stored) {
+                licenses = JSON.parse(stored);
+            }
+            renderLicenses();
+            updateStats();
+            checkRenewalAlerts();
+        }
+
+        // Save licenses to localStorage
+        function saveLicensesToStorage() {
+            localStorage.setItem('it-licenses', JSON.stringify(licenses));
+        }
+
+        // Open add modal
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modal-title').textContent = 'Add License';
+            document.getElementById('license-form').reset();
+            document.getElementById('license-modal').classList.add('active');
+        }
+
+        // Open edit modal
+        function openEditModal(id) {
+            editingId = id;
+            const license = licenses.find(l => l.id === id);
+            if (!license) return;
+
+            document.getElementById('modal-title').textContent = 'Edit License';
+            document.getElementById('product-name').value = license.productName;
+            document.getElementById('vendor-name').value = license.vendorName;
+            document.getElementById('contact-email').value = license.contactEmail || '';
+            document.getElementById('contact-phone').value = license.contactPhone || '';
+            document.getElementById('account-rep').value = license.accountRep || '';
+            document.getElementById('license-key').value = license.licenseKey || '';
+            document.getElementById('seats').value = license.seats || '';
+            document.getElementById('billing-cycle').value = license.billingCycle || 'annual';
+            document.getElementById('cost').value = license.cost || license.annualCost || '';
+            document.getElementById('auto-renew').checked = license.autoRenew || false;
+            document.getElementById('purchase-date').value = license.purchaseDate || '';
+            document.getElementById('renewal-date').value = license.renewalDate;
+            document.getElementById('notes').value = license.notes || '';
+            
+            document.getElementById('license-modal').classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('license-modal').classList.remove('active');
+            editingId = null;
+        }
+
+        // Save license
+        function saveLicense(event) {
+            event.preventDefault();
+
+            const licenseData = {
+                productName: document.getElementById('product-name').value,
+                vendorName: document.getElementById('vendor-name').value,
+                contactEmail: document.getElementById('contact-email').value,
+                contactPhone: document.getElementById('contact-phone').value,
+                accountRep: document.getElementById('account-rep').value,
+                licenseKey: document.getElementById('license-key').value,
+                seats: parseInt(document.getElementById('seats').value) || null,
+                billingCycle: document.getElementById('billing-cycle').value,
+                cost: parseFloat(document.getElementById('cost').value) || null,
+                autoRenew: document.getElementById('auto-renew').checked,
+                purchaseDate: document.getElementById('purchase-date').value,
+                renewalDate: document.getElementById('renewal-date').value,
+                notes: document.getElementById('notes').value
+            };
+
+            if (editingId) {
+                const index = licenses.findIndex(l => l.id === editingId);
+                licenses[index] = { ...licenses[index], ...licenseData };
+            } else {
+                licenseData.id = Date.now().toString();
+                licenseData.createdAt = new Date().toISOString();
+                licenses.push(licenseData);
+            }
+
+            saveLicensesToStorage();
+            renderLicenses();
+            updateStats();
+            checkRenewalAlerts();
+            closeModal();
+        }
+
+        // Delete license
+        function deleteLicense(id) {
+            if (confirm('Are you sure you want to delete this license?')) {
+                licenses = licenses.filter(l => l.id !== id);
+                saveLicensesToStorage();
+                renderLicenses();
+                updateStats();
+                checkRenewalAlerts();
+            }
+        }
+
+        // Get renewal status
+        function getRenewalStatus(renewalDate, billingCycle, autoRenew) {
+            const today = new Date();
+            const renewal = new Date(renewalDate);
+            const daysUntilRenewal = Math.floor((renewal - today) / (1000 * 60 * 60 * 24));
+
+            // One-time purchases don't expire
+            if (billingCycle === 'one-time') {
+                return { status: 'ok', label: 'Perpetual', class: 'ok' };
+            }
+
+            // Auto-renew licenses just need awareness
+            if (autoRenew) {
+                if (daysUntilRenewal < 0) {
+                    return { status: 'ok', label: 'Auto-renewed', class: 'ok' };
+                }
+                // Different warning thresholds based on billing cycle
+                const warningDays = billingCycle === 'monthly' ? 7 : 30;
+                if (daysUntilRenewal <= warningDays) {
+                    return { status: 'expiring', label: `Auto-renews in ${daysUntilRenewal}d`, class: 'warning' };
+                }
+                return { status: 'ok', label: `Auto-renews (${daysUntilRenewal}d)`, class: 'ok' };
+            }
+
+            // Manual renewal - needs action
+            if (daysUntilRenewal < 0) {
+                return { status: 'expired', label: 'Expired', class: 'expired' };
+            }
+            
+            // Different warning thresholds based on billing cycle
+            const warningDays = billingCycle === 'monthly' ? 7 : 30;
+            if (daysUntilRenewal <= warningDays) {
+                return { status: 'expiring', label: `${daysUntilRenewal} days left`, class: 'warning' };
+            }
+            
+            return { status: 'ok', label: `${daysUntilRenewal} days`, class: 'ok' };
+        }
+
+        // Filter licenses
+        function filterLicenses() {
+            let filtered = licenses;
+
+            // Apply filter
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(license => {
+                    const status = getRenewalStatus(license.renewalDate, license.billingCycle || 'annual', license.autoRenew).status;
+                    if (currentFilter === 'active') return status === 'ok';
+                    if (currentFilter === 'expiring') return status === 'expiring';
+                    if (currentFilter === 'expired') return status === 'expired';
+                    return true;
+                });
+            }
+
+            // Apply search
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filtered = filtered.filter(license => 
+                    license.productName.toLowerCase().includes(term) ||
+                    license.vendorName.toLowerCase().includes(term) ||
+                    (license.licenseKey && license.licenseKey.toLowerCase().includes(term))
+                );
+            }
+
+            return filtered;
+        }
+
+        // Render licenses
+        function renderLicenses() {
+            const grid = document.getElementById('licenses-grid');
+            const filtered = filterLicenses();
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3>No licenses found</h3>
+                        <p>${searchTerm ? 'Try a different search term' : 'Click "Add License" to get started'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(license => {
+                const renewal = getRenewalStatus(license.renewalDate, license.billingCycle || 'annual', license.autoRenew);
+                const billingCycle = license.billingCycle || 'annual';
+                const cost = license.cost || license.annualCost || 0;
+                
+                // Calculate annual cost from billing cycle
+                let annualCost = 0;
+                if (billingCycle === 'monthly') {
+                    annualCost = cost * 12;
+                } else if (billingCycle === 'annual') {
+                    annualCost = cost;
+                }
+
+                return `
+                    <div class="license-card ${renewal.class === 'expired' ? 'expired' : renewal.class === 'warning' ? 'expiring-soon' : ''}">
+                        <div class="license-header">
+                            <div>
+                                <div class="license-title">${license.productName}</div>
+                                <div class="vendor-name">${license.vendorName}</div>
+                            </div>
+                            <div class="license-actions">
+                                <button class="icon-btn" onclick="openEditModal('${license.id}')" title="Edit">✏️</button>
+                                <button class="icon-btn" onclick="deleteLicense('${license.id}')" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="license-details">
+                            ${license.contactEmail ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Contact Email</div>
+                                    <div class="detail-value">${license.contactEmail}</div>
+                                </div>
+                            ` : ''}
+                            ${license.contactPhone ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Contact Phone</div>
+                                    <div class="detail-value">${license.contactPhone}</div>
+                                </div>
+                            ` : ''}
+                            ${license.accountRep ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Account Rep</div>
+                                    <div class="detail-value">${license.accountRep}</div>
+                                </div>
+                            ` : ''}
+                            ${license.seats ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Seats/Users</div>
+                                    <div class="detail-value">${license.seats}</div>
+                                </div>
+                            ` : ''}
+                            <div class="detail-item">
+                                <div class="detail-label">Billing Cycle</div>
+                                <div class="detail-value">
+                                    ${billingCycle.charAt(0).toUpperCase() + billingCycle.slice(1)}
+                                    ${license.autoRenew ? ' <span style="color: #ff8c00; font-size: 12px;">● Auto-renew</span>' : ''}
+                                </div>
+                            </div>
+                            ${cost ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Cost</div>
+                                    <div class="detail-value">
+                                        $${cost.toLocaleString()}/${billingCycle === 'monthly' ? 'mo' : billingCycle === 'annual' ? 'yr' : 'once'}
+                                        ${annualCost > 0 && billingCycle === 'monthly' ? `<span style="font-size: 12px; color: #718096;"> ($${annualCost.toLocaleString()}/yr)</span>` : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${billingCycle !== 'one-time' ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">Renewal Date</div>
+                                    <div class="detail-value">
+                                        ${new Date(license.renewalDate).toLocaleDateString()}
+                                        <span class="renewal-badge ${renewal.class}">${renewal.label}</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        ${license.licenseKey ? `
+                            <div class="detail-item">
+                                <div class="detail-label">License Key / Credentials</div>
+                                <div class="license-key">
+                                    <span>${license.licenseKey}</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('${license.licenseKey.replace(/'/g, "\\'")}')">Copy</button>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${license.notes ? `
+                            <div class="detail-item" style="margin-top: 12px;">
+                                <div class="detail-label">Notes</div>
+                                <div class="detail-value">${license.notes}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('total-licenses').textContent = licenses.length;
+
+            let expired = 0;
+            let expiring = 0;
+            let totalMonthly = 0;
+            let totalAnnual = 0;
+
+            licenses.forEach(license => {
+                const billingCycle = license.billingCycle || 'annual';
+                const cost = license.cost || license.annualCost || 0;
+                const status = getRenewalStatus(license.renewalDate, billingCycle, license.autoRenew).status;
+                
+                if (status === 'expired') expired++;
+                if (status === 'expiring') expiring++;
+                
+                // Calculate costs
+                if (billingCycle === 'monthly') {
+                    totalMonthly += cost;
+                    totalAnnual += cost * 12;
+                } else if (billingCycle === 'annual') {
+                    totalMonthly += cost / 12;
+                    totalAnnual += cost;
+                }
+                // One-time purchases don't count toward recurring costs
+            });
+
+            document.getElementById('expired-count').textContent = expired;
+            document.getElementById('expiring-count').textContent = expiring;
+            document.getElementById('monthly-cost').textContent = '$' + totalMonthly.toFixed(0).toLocaleString();
+            document.getElementById('annual-cost').textContent = '$' + totalAnnual.toFixed(0).toLocaleString();
+        }
+
+        // Check renewal alerts
+        function checkRenewalAlerts() {
+            const alertsContainer = document.getElementById('alerts-container');
+            const expiring = licenses.filter(l => {
+                const billingCycle = l.billingCycle || 'annual';
+                return getRenewalStatus(l.renewalDate, billingCycle, l.autoRenew).status === 'expiring' && !l.autoRenew;
+            });
+            const expired = licenses.filter(l => {
+                const billingCycle = l.billingCycle || 'annual';
+                return getRenewalStatus(l.renewalDate, billingCycle, l.autoRenew).status === 'expired';
+            });
+
+            let alerts = '';
+
+            if (expired.length > 0) {
+                alerts += `
+                    <div class="alert-banner critical">
+                        <span style="font-size: 24px;">⚠️</span>
+                        <div>
+                            <strong>Action Required:</strong> ${expired.length} license${expired.length > 1 ? 's have' : ' has'} expired! 
+                            ${expired.map(l => l.productName).join(', ')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (expiring.length > 0) {
+                alerts += `
+                    <div class="alert-banner">
+                        <span style="font-size: 24px;">🔔</span>
+                        <div>
+                            <strong>Renewal Alert:</strong> ${expiring.length} license${expiring.length > 1 ? 's need' : ' needs'} manual renewal soon. 
+                            ${expiring.map(l => l.productName).join(', ')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            alertsContainer.innerHTML = alerts;
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const headers = ['Product Name', 'Vendor', 'Contact Email', 'Contact Phone', 'Account Rep', 'License Key', 'Seats', 'Billing Cycle', 'Cost', 'Auto-Renew', 'Purchase Date', 'Renewal Date', 'Status', 'Notes'];
+            const rows = licenses.map(license => {
+                const billingCycle = license.billingCycle || 'annual';
+                const status = getRenewalStatus(license.renewalDate, billingCycle, license.autoRenew).label;
+                const cost = license.cost || license.annualCost || '';
+                return [
+                    license.productName,
+                    license.vendorName,
+                    license.contactEmail || '',
+                    license.contactPhone || '',
+                    license.accountRep || '',
+                    license.licenseKey || '',
+                    license.seats || '',
+                    billingCycle,
+                    cost,
+                    license.autoRenew ? 'Yes' : 'No',
+                    license.purchaseDate || '',
+                    license.renewalDate,
+                    status,
+                    license.notes || ''
+                ];
+            });
+
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `licenses-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderLicenses();
+            });
+        });
+
+        // Search
+        document.getElementById('search-box').addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            renderLicenses();
+        });
+
+        // Close modal on background click
+        document.getElementById('license-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'license-modal') {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        loadLicenses();
+    </script>
+</body>
+</html>
